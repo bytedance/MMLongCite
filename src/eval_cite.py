@@ -18,7 +18,8 @@ import json
 import re
 import string
 import copy
-import multiprocessing as mp
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import base64
 import requests
 import time
@@ -32,42 +33,56 @@ from tqdm import tqdm
 from transformers import AutoTokenizer
 import openai
 from openai import OpenAI
-from src.utils import *
+from utils import *
 
 # ============================================================
-# Global variables (used for per-process initialization data)
+# Thread-local storage
 # ============================================================
-_process_data = None
+_thread_local = threading.local()
+_global_config = {}
+_thread_id_counter = 0
+_thread_id_lock = threading.Lock()
 
 
-def init_process(keys, base_url, data_path, at_most_citations):
+def get_thread_id():
     """
-    Initialize per-process configurations:
-    - Select the API key based on process ID.
-    - Create an OpenAI client instance for each process.
-    - Load tokenizer for text processing.
+    Get a unique thread ID for the current thread.
     """
-    global _process_data
+    global _thread_id_counter
+    if not hasattr(_thread_local, 'thread_id'):
+        with _thread_id_lock:
+            _thread_local.thread_id = _thread_id_counter
+            _thread_id_counter += 1
+    return _thread_local.thread_id
 
-    process_id = mp.current_process()._identity[0] if mp.current_process()._identity else 1
-    key_index = (process_id - 1) % len(keys)
+
+def init_thread_data():
+    """
+    Initialize per-thread configurations:
+    - Select the API key based on thread ID.
+    - Create an OpenAI client instance for each thread.
+    - Load tokenizer for text processing (shared across threads).
+    """
+    if hasattr(_thread_local, 'initialized') and _thread_local.initialized:
+        return
+    
+    thread_id = get_thread_id()
+    keys = _global_config['keys']
+    base_url = _global_config['base_url']
+    
+    key_index = thread_id % len(keys)
     key = keys[key_index]
-
+    
     client = OpenAI(
         api_key=key,
         base_url=base_url,
     )
-
-    tokenizer = AutoTokenizer.from_pretrained(
-        "Qwen/Qwen2.5-VL-7B-Instruct"
-    )
-
-    _process_data = {
-        'client': client,
-        'data_path': data_path,
-        'at_most_citations': at_most_citations,
-        'tokenizer': tokenizer
-    }
+    
+    _thread_local.client = client
+    _thread_local.data_path = _global_config['data_path']
+    _thread_local.at_most_citations = _global_config['at_most_citations']
+    _thread_local.tokenizer = _global_config['tokenizer']
+    _thread_local.initialized = True
 
 
 def remove_citations(sent):
@@ -84,9 +99,9 @@ def _run_nli_autoais(passage, claim, question):
     Returns:
         1 if relevant, 0 if irrelevant.
     """
-    global _process_data
-    client = _process_data['client']
-
+    init_thread_data()
+    client = _thread_local.client
+    
     mm_input = [
         {"type": "text", "text": relevant_prompt},
         {"type": "text", "text": "\n<question>\n"}
@@ -98,44 +113,45 @@ def _run_nli_autoais(passage, claim, question):
         {"type": "text", "text": "\n</content>\n\n"},
         {"type": "text", "text": "Please respond with a single-word rating: 'Relevant' or 'Irrelevant' without any explanation.\nYour rating:"}
     ]
-
+    
     # Convert image input to base64
     for i, input_item in enumerate(mm_input):
         if input_item['type'] == "image":
             mm_input[i] = {
                 "type": "image_url",
                 "image_url": {
-                    "url": image_to_base64(input_item['image'], max_pixels=1280 * 28 * 28)
+                    "url": image_to_base64(input_item['image'], max_pixels=1024 * 28 * 28)
                 }
             }
-
-    max_retries = 120
+    
+    max_retries = 30
     for attempt in range(max_retries):
         try:
             response = client.chat.completions.create(
-                model="gpt-4.1-2025-04-14",
+                model="gpt-5.2-chat-latest",
                 messages=[{"role": "user", "content": mm_input}],
-                max_tokens=20,
+                max_tokens=1024,
                 temperature=0,
                 top_p=1,
                 n=1,
-                timeout=3600,
+                timeout=60,
             )
-
+            
             result = response.choices[0].message.content
+
             if "irrelevant" in result.lower():
                 return 0
             elif "relevant" in result.lower():
                 return 1
             return 0
-
+        
         except Exception as e:
             if (attempt + 1) % 2 == 0:
-                print(f"Process {mp.current_process().name} failed attempt [{attempt+1}/{max_retries}]: {e}")
+                print(f"Thread {threading.current_thread().name} failed attempt [{attempt+1}/{max_retries}]: {e}")
             if attempt < max_retries - 1:
                 time.sleep(5)
             else:
-                print(f"Process {mp.current_process().name} failed after {max_retries} retries: {str(e)}")
+                print(f"Thread {threading.current_thread().name} failed after {max_retries} retries: {str(e)}")
                 return 0  # Default value
 
 
@@ -144,9 +160,9 @@ def _format_document(doc):
     Format document content into standardized OpenAI input format.
     Handles text, image, and video frame types differently.
     """
-    global _process_data
-    data_path = _process_data['data_path']
-
+    init_thread_data()
+    data_path = _thread_local.data_path
+    
     if doc['type'] == 'text':
         return [{"type": "text", "text": f"Passage: {doc['text']}\n"}]
     else:
@@ -158,35 +174,47 @@ def _format_document(doc):
         ]
 
 
-def compute_autoais_single_item(item_with_index):
+def compute_autoais_single_item(item_with_index, task):
     """
     Process a single dataset item for citation relevance evaluation.
-    This function runs inside worker processes of multiprocessing.Pool.
+    This function runs inside worker threads of ThreadPoolExecutor.
     """
-    global _process_data
-    at_most_citations = _process_data['at_most_citations']
-    data_path = _process_data['data_path']
-    tokenizer = _process_data['tokenizer']
-
+    init_thread_data()
+    at_most_citations = _thread_local.at_most_citations
+    data_path = _thread_local.data_path
+    tokenizer = _thread_local.tokenizer
+    
     index, item = item_with_index
-
+    
+    if not item['model_predictions']:
+        return {
+            "id": index,
+            "citation_rec": 0,
+            "citation_prec": 0,
+            "citation_f1": 0,
+        }
+    
     # Post-process model predictions depending on dataset source/type
-    if ("think" in data_path.lower() and "glm" in data_path.lower()) or "mimo" in data_path.lower():
+    if "think" in data_path.lower() and ("glm" in data_path.lower() or "mimo" in data_path.lower() or "qwen" in data_path.lower()):
         if "</think>" in item['model_predictions']:
-            ind = item['model_predictions'].index("</think>") + len("</think>")
+            ind = item['model_predictions'].rindex("</think>") + len("</think>")
             item['model_predictions'] = item['model_predictions'][ind:]
-        else:
-            pred_ids = tokenizer.encode(item['model_predictions'][-512:], add_special_tokens=False)
+            pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[:128]
             item['model_predictions'] = tokenizer.decode(pred_ids)
-
+        else:
+            pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[-128:]
+            item['model_predictions'] = tokenizer.decode(pred_ids)
+    
     elif "think" in data_path.lower() and "kimi" in data_path.lower():
         if "◁/think▷" in item['model_predictions']:
-            ind = item['model_predictions'].index("◁/think▷") + len("◁/think▷")
+            ind = item['model_predictions'].rindex("◁/think▷") + len("◁/think▷")
             item['model_predictions'] = item['model_predictions'][ind:]
-        else:
-            pred_ids = tokenizer.encode(item['model_predictions'][-512:], add_special_tokens=False)
+            pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[:128]
             item['model_predictions'] = tokenizer.decode(pred_ids)
-
+        else:
+            pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[-128:]
+            item['model_predictions'] = tokenizer.decode(pred_ids)
+    
     # Sentence segmentation
     sents = sent_tokenize(item['model_predictions'])
     if len(sents) == 0:
@@ -196,20 +224,23 @@ def compute_autoais_single_item(item_with_index):
             "citation_prec": 0,
             "citation_f1": 0,
         }
-
+        
+    context = item['meta']['original_context'] if 'hr' in task else item['context']
+    
     target_sents = [remove_citations(sent).strip() for sent in sents]
-
+    
     entail = 0
     entail_prec = 0
     total_citations = 0
 
+    
     # Iterate over each sentence for citation analysis
     for sent_id, sent in enumerate(sents):
         target_sent = target_sents[sent_id]
         joint_entail = -1
-
+        
         ref = [int(r[1:]) - 1 for r in re.findall(r"\[\d+", sent)]
-        if len(ref) == 0 or any([ref_id >= len(item['context']) for ref_id in ref]):
+        if len(ref) == 0 or any([ref_id >= len(context) for ref_id in ref]):
             joint_entail = 0
         else:
             if at_most_citations is not None:
@@ -217,24 +248,24 @@ def compute_autoais_single_item(item_with_index):
             total_citations += len(ref)
             joint_passage = []
             for psgs_id in ref:
-                joint_passage += _format_document(item['context'][psgs_id])
-
+                joint_passage += _format_document(context[psgs_id])
+        
         if joint_entail == -1:
             joint_entail = _run_nli_autoais(joint_passage, target_sent, item['question'])
-
+        
         entail += joint_entail
-
+        
         if joint_entail and len(ref) > 1:
             for psgs_id in ref:
-                passage = _format_document(item['context'][psgs_id])
+                passage = _format_document(context[psgs_id])
                 nli_result = _run_nli_autoais(passage, target_sent, item['question'])
-
+                
                 if not nli_result:
                     subset_exclude = copy.deepcopy(ref)
                     subset_exclude.remove(psgs_id)
                     passage = []
                     for pid in subset_exclude:
-                        passage += _format_document(item['context'][pid])
+                        passage += _format_document(context[pid])
                     nli_result = _run_nli_autoais(passage, target_sent, item['question'])
                     if not nli_result:
                         entail_prec += 1
@@ -242,11 +273,11 @@ def compute_autoais_single_item(item_with_index):
                     entail_prec += 1
         else:
             entail_prec += joint_entail
-
+    
     recall = entail / len(sents) if len(sents) > 0 else 0
     precision = entail_prec / total_citations if total_citations > 0 else 0
     f1 = (2 * precision * recall) / (precision + recall) if precision + recall != 0 else 0
-
+    
     return {
         "id": index,
         "citation_rec": recall,
@@ -257,56 +288,79 @@ def compute_autoais_single_item(item_with_index):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, required=True)
+    parser.add_argument("--model", type=str, required=True)
     parser.add_argument("--at_most_citations", type=int, default=3)
+    parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--api_base_url", type=str, required=True)
     parser.add_argument("--api_keys", nargs="+", required=True, help="List of API KEYs")
-    parser.add_argument("--processes", type=int, default=None, help="Number of processes to use (default: CPU cores)")
-
+    parser.add_argument("--threads", type=int, default=None, help="Number of threads to use (default: num_keys * 4)")
+    
     args = parser.parse_args()
-
+    
     key_lst = args.api_keys
-
-    with open(args.file, 'r') as f:
+    file_path = os.path.join("results", args.task, args.model + ".json")
+    
+    with open(file_path, 'r') as f:
         data = json.load(f)
-
-    file_name = args.file[:args.file.rindex('.')]
-
-    num_processes = len(key_lst) * 4 if args.processes is None else args.processes
-    print(f"Using {num_processes} processes to handle {len(data)} items.")
-
+    
+    model_name = args.model
+    task = args.task
+    
+    num_threads = len(key_lst) * 4 if args.threads is None else args.threads
+    print(f"Using {num_threads} threads to handle {len(data)} items.")
+    
+    # Initialize global configuration (shared across all threads)
+    tokenizer = AutoTokenizer.from_pretrained(
+        "Qwen/Qwen2.5-VL-7B-Instruct"
+    )
+    
+    _global_config['keys'] = key_lst
+    _global_config['base_url'] = args.api_base_url
+    _global_config['data_path'] = file_path
+    _global_config['at_most_citations'] = args.at_most_citations
+    _global_config['tokenizer'] = tokenizer
+    
     data_with_index = list(enumerate(data))
     results = []
-
-    for batch_start in range(0, len(data), 64):
-        with mp.Pool(
-            processes=num_processes,
-            initializer=init_process,
-            initargs=(key_lst, args.api_base_url, args.file, args.at_most_citations)
-        ) as pool:
-            for result in tqdm(
-                pool.imap_unordered(compute_autoais_single_item, data_with_index[batch_start:batch_start + 64]),
-                total=len(data_with_index[batch_start:batch_start + 64]),
-                desc="Processing"
-            ):
-                results.append(result)
-
+    
+    # Process data in batches of 64
+    for batch_start in range(0, len(data), 1024):
+        batch_data = data_with_index[batch_start:batch_start + 1024]
+        
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            # Submit all tasks
+            futures = {executor.submit(compute_autoais_single_item, item, task): item for item in batch_data}
+            
+            # Process results as they complete with progress bar
+            for future in tqdm(as_completed(futures), total=len(batch_data), desc="Processing"):
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    print(f"Error processing item: {e}")
+    
     results = sorted(results, key=lambda x: x['id'])
-
+    for i in range(len(data)):
+        data[i]['citation_precision'] = results[i]["citation_prec"]
+        data[i]['citation_recall'] = results[i]["citation_rec"]
+        data[i]['citation_f1'] = results[i]["citation_f1"]
+    with open(os.path.join("results", task, model_name + "_citation_result.json"), "w") as f:
+        json.dump(data, f, indent=4)
+    
     result_dic = {
         "citation_rec": 100 * sum(r["citation_rec"] for r in results) / len(results),
         "citation_prec": 100 * sum(r["citation_prec"] for r in results) / len(results),
         "citation_f1": 100 * sum(r["citation_f1"] for r in results) / len(results),
     }
-
+    
     for i, item in enumerate(data):
         item['citation_recall'] = results[i]["citation_rec"]
         item['citation_precision'] = results[i]["citation_prec"]
         item['citation_f1'] = results[i]["citation_f1"]
-
-    with open(file_name + "_citation_result.json", "w") as f:
+    
+    with open(os.path.join("results", task, model_name + "_citation_score.json"), "w") as f:
         json.dump(result_dic, f, indent=4)
-
+    
     print("Processing completed!")
     print(f"Results - Recall: {result_dic['citation_rec']:.2f}%, Precision: {result_dic['citation_prec']:.2f}%, F1: {result_dic['citation_f1']:.2f}%")
 

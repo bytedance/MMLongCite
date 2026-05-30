@@ -104,71 +104,71 @@ Read the AI assistant's answer and compare against the reference answer, and giv
 
 Instruction = {
     "longdocurl": image_only_instruction,
-    "longdocurl-grounding-easy": image_only_instruction,
-    "longdocurl-grounding-hard": image_only_instruction,
+    "longdocurl-hr-easy": image_only_instruction,
+    "longdocurl-hr-hard": image_only_instruction,
     "mmlongbench-doc": image_only_instruction,
-    "hotpotqa": image_only_instruction,
-    "hotpotqa-grounding-easy": image_only_instruction,
-    "hotpotqa-grounding-hard": image_only_instruction,
+    "slidevqa": image_only_instruction,
     "2wikimultihopqa": image_only_instruction,
+    "2wikimultihopqa-hr-easy": image_only_instruction,
+    "2wikimultihopqa-hr-hard": image_only_instruction,
     "mm-niah": image_text_instruction,
     "visual-haystack": image_only_instruction,
-    "visual-haystack-grounding-easy": image_only_instruction,
-    "visual-haystack-grounding-hard": image_only_instruction,
+    "visual-haystack-hr-easy": image_only_instruction,
+    "visual-haystack-hr-hard": image_only_instruction,
     "longvideobench": video_instruction,
+    "longvideobench-hr-easy": video_instruction,
+    "longvideobench-hr-hard": video_instruction,
     "video-mme": video_instruction,
-    "video-mme-grounding-easy": video_instruction,
-    "video-mme-grounding-hard": video_instruction,
 }
 
 DATASET_INFO = {
     "longdocurl": {
-        "file_path": "MMLongCite/data/mmlongcite/longdocurl.json",
+        "file_path": "data/mmlongcite/longdocurl.json",
     },
-    "longdocurl-grounding-easy": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/easy/longdocurl.json",
+    "longdocurl-hr-easy": {
+        "file_path": "data/mmlongcite-hr/easy/longdocurl.json",
     },
-    "longdocurl-grounding-hard": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/hard/longdocurl.json",
+    "longdocurl-hr-hard": {
+        "file_path": "data/mmlongcite-hr/hard/longdocurl.json",
     },
     "mmlongbench-doc": {
-        "file_path": "MMLongCite/data/mmlongcite/mmlongbench-doc.json",
+        "file_path": "data/mmlongcite/mmlongbench-doc.json",
     },
-    "hotpotqa": {
-        "file_path": "MMLongCite/data/mmlongcite/hotpotqa.json",
-    },
-    "hotpotqa-grounding-easy": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/easy/hotpotqa.json",
-    },
-    "hotpotqa-grounding-hard": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/hard/hotpotqa.json",
+    "slidevqa": {
+        "file_path": "data/mmlongcite/slidevqa.json",
     },
     "2wikimultihopqa": {
-        "file_path": "MMLongCite/data/mmlongcite/2wikimultihopqa.json",
+        "file_path": "data/mmlongcite/2wikimultihopqa.json",
+    },
+    "2wikimultihopqa-hr-easy": {
+        "file_path": "data/mmlongcite-hr/easy/2wikimultihopqa.json",
+    },
+    "2wikimultihopqa-hr-hard": {
+        "file_path": "data/mmlongcite-hr/hard/2wikimultihopqa.json",
     },
     "mm-niah": {
-        "file_path": "MMLongCite/data/mmlongcite/mm-niah.json",
+        "file_path": "data/mmlongcite/mm-niah.json",
     },
     "visual-haystack": {
-        "file_path": "MMLongCite/data/mmlongcite/visual_haystack.json",
+        "file_path": "data/mmlongcite/visual-haystack.json",
     },
-    "visual-haystack-grounding-easy": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/easy/visual_haystack.json",
+    "visual-haystack-hr-easy": {
+        "file_path": "data/mmlongcite-hr/easy/visual-haystack.json",
     },
-    "visual-haystack-grounding-hard": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/hard/visual_haystack.json",
+    "visual-haystack-hr-hard": {
+        "file_path": "data/mmlongcite-hr/hard/visual-haystack.json",
     },
     "longvideobench": {
-        "file_path": "MMLongCite/data/mmlongcite/longvideobench.json",
+        "file_path": "data/mmlongcite/longvideobench.json",
+    },
+    "longvideobench-hr-easy": {
+        "file_path": "data/mmlongcite-hr/easy/longvideobench.json",
+    },
+    "longvideobench-hr-hard": {
+        "file_path": "data/mmlongcite-hr/hard/longvideobench.json",
     },
     "video-mme": {
-        "file_path": "MMLongCite/data/mmlongcite/video-mme.json",
-    },
-    "video-mme-grounding-easy": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/easy/video-mme.json",
-    },
-    "video-mme-grounding-hard": {
-        "file_path": "MMLongCite/data/mmlongcite-grounding/hard/video-mme.json",
+        "file_path": "data/mmlongcite/video-mme.json",
     },
 }
 
@@ -185,6 +185,39 @@ MODEL_DIC = {
     "MiMo-VL-7B-RL-2508": "XiaomiMiMo/MiMo-VL-7B-RL-2508",
     "gemma-3-12b-it": "google/gemma-3-12b-it",
 }
+
+MODEL_DIC = {
+    "Qwen2.5-VL-3B-Instruct": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Qwen2.5-VL-7B-Instruct": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "Qwen2.5-VL-32B-Instruct": "Qwen/Qwen2.5-VL-32B-Instruct",
+    "Qwen2.5-VL-72B-Instruct": "Qwen/Qwen2.5-VL-72B-Instruct",
+    "MiMo-VL-7B-SFT-2508": "XiaomiMiMo/MiMo-VL-7B-SFT-2508",
+    "MiMo-VL-7B-RL-2508": "XiaomiMiMo/MiMo-VL-7B-RL-2508",
+    "MiMo-VL-7B-SFT-2508_no_think": "XiaomiMiMo/MiMo-VL-7B-SFT-2508",
+    "MiMo-VL-7B-RL-2508_no_think": "XiaomiMiMo/MiMo-VL-7B-RL-2508",
+    "gemma-3-12b-it": "google/gemma-3-12b-it",
+    "InternVL3_5-4B-HF": "OpenGVLab/InternVL3_5-4B-HF",
+    "Qwen3-VL-30B-A3B-Instruct": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "Qwen3-VL-235B-A22B-Instruct": "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    "Kimi-VL-A3B-Instruct": "moonshotai/Kimi-VL-A3B-Instruct",
+    "Kimi-VL-A3B-Thinking-2506": "moonshotai/Kimi-VL-A3B-Thinking-2506",
+    "gemma-4-E4B-it": "google/gemma-4-E4B-it",
+    "gemma-4-E4B-it_thinking": "google/gemma-4-E4B-it",
+    "gemma-4-26B-A4B-it": "google/gemma-4-26B-A4B-it",
+    "Qwen3-VL-2B-Instruct": "Qwen/Qwen3-VL-2B-Instruct",
+    "Qwen3-VL-4B-Instruct": "Qwen/Qwen3-VL-4B-Instruct",
+    "Qwen3-VL-8B-Instruct": "Qwen/Qwen3-VL-8B-Instruct",
+    "Qwen3.5-2B": "Qwen/Qwen3.5-2B",
+    "Qwen3.5-4B": "Qwen/Qwen3.5-4B",
+    "Qwen3.5-9B": "Qwen/Qwen3.5-9B",
+    "Qwen3.5-27B": "Qwen/Qwen3.5-27B",
+    "Qwen3.5-27B_thinking": "Qwen/Qwen3.5-27B",
+    "Qwen3.5-122B-A10B": "Qwen/Qwen3.5-122B-A10B",
+    "GLM-4.6V-Flash": "zai-org/GLM-4.6V-Flash",
+    "GLM-4.6V": "zai-org/GLM-4.6V",
+    "GLM-4.6V_thinking": "zai-org/GLM-4.6V",
+}
+
 
 model_generation_params = {
     "Qwen2.5-VL-3B-Instruct": {
@@ -217,53 +250,151 @@ model_generation_params = {
         "top_p": 1,
         "top_k": None
     },
-    "Kimi-VL-A3B-Thinking": {
+    "Kimi-VL-A3B-Thinking-2506": {
         "max_tokens": 32768,
-        "temperature": 0.8,
-        "top_p": 0.9,
+        "temperature": 0.3,
+        "top_p": 0.95,
         "top_k": None
     },
-    "GLM-4.5V": {
+    "GLM-4.6V-Flash": {
         "max_tokens": 512,
         "temperature": 0.8,
-        "top_p": 0.9,
-        "top_k": None,
-        "enable_thinking": False
+        "top_p": 0.6,
+        "top_k": 2,
+    },
+    "GLM-4.6V": {
+        "max_tokens": 512,
+        "temperature": 0.8,
+        "top_p": 0.6,
+        "top_k": 2,
+    },
+    "GLM-4.6V_thinking": {
+        "max_tokens": 32768,
+        "temperature": 0.8,
+        "top_p": 0.6,
+        "top_k": 2,
     },
     "MiMo-VL-7B-SFT-2508": {
         "max_tokens": 32768,
         "temperature": 0.3,
         "top_p": 0.95,
         "top_k": None,
-        "enable_thinking": False
     },
     "MiMo-VL-7B-RL-2508": {
         "max_tokens": 32768,
         "temperature": 0.3,
         "top_p": 0.95,
         "top_k": None,
-        "enable_thinking": False
+    },
+    "MiMo-VL-7B-SFT-2508_no_think": {
+        "max_tokens": 512,
+        "temperature": 0.3,
+        "top_p": 0.95,
+        "top_k": None,
+    },
+    "MiMo-VL-7B-RL-2508_no_think": {
+        "max_tokens": 512,
+        "temperature": 0.3,
+        "top_p": 0.95,
+        "top_k": None,
     },
     "gemma-3-12b-it": {
         "max_tokens": 512,
         "temperature": 0,
         "top_p": 1,
         "top_k": None,
-        "enable_thinking": False
     },
-    "gemini-2.5-pro-preview-06-05": {
-        "max_tokens": 32768,
-        "temperature": 0.3,
+    "gemma-4-E4B-it": {
+        "max_tokens": 512,
+        "temperature": 1,
         "top_p": 0.95,
-        "top_k": None,
+        "top_k": 64,
     },
-    "gpt-4.1-2025-04-14": {
+    "gemma-4-E4B-it_thinking": {
+        "max_tokens": 32768,
+        "temperature": 1,
+        "top_p": 0.95,
+        "top_k": 64,
+    },
+    "gemma-4-26B-A4B-it": {
+        "max_tokens": 512,
+        "temperature": 1,
+        "top_p": 0.95,
+        "top_k": 64,
+    },
+    "gemma-3-12b-it": {
         "max_tokens": 512,
         "temperature": 0,
         "top_p": 1,
         "top_k": None,
     },
-    "doubao-1.6": {
+    "InternVL3_5-4B-HF": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3-VL-2B-Instruct": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3-VL-4B-Instruct": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3-VL-8B-Instruct": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3.5-2B": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3.5-4B": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3.5-9B": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3.5-27B": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3.5-27B_thinking": {
+        "max_tokens": 32768,
+        "temperature": 0.3,
+        "top_p": 0.95,
+        "top_k": None,
+    },
+    "Qwen3.5-122B-A10B": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3-VL-30B-A3B-Instruct": {
+        "max_tokens": 512,
+        "temperature": 0,
+        "top_p": 1,
+        "top_k": None,
+    },
+    "Qwen3-VL-235B-A22B-Instruct": {
         "max_tokens": 512,
         "temperature": 0,
         "top_p": 1,
@@ -296,7 +427,7 @@ def image_to_base64(image_path, min_pixels=None, max_pixels=None, resample=Image
     jpeg_bytes = jpeg_buffer.getvalue()
     jpeg_base64_string = base64.b64encode(jpeg_bytes).decode('utf-8')
 
-    if image_path.endswith(".jpg"):
+    if image_path.endswith(".jpg") or image_path.endswith(".jpeg"):
         res = f"data:image/jpeg;base64,{jpeg_base64_string}"
     elif image_path.endswith(".png"):
         res = f"data:image/png;base64,{jpeg_base64_string}"

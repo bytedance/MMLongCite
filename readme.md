@@ -1,6 +1,19 @@
-# MMLongCite: A Benchmark for Evaluating Fidelity of Long-Context Vision-Language Models
+# MMLONGCITE: A Benchmark for Evaluating Faithfulness of Long-Context Vision-Language Models
 
-**Paper** [![arXiv](https://img.shields.io/badge/arXiv-2410.02115-b31b1b.svg?style=plastic)](https://arxiv.org/abs/2510.13276) &nbsp; **Dataset** [![🤗 Dataset](https://img.shields.io/badge/🤗-Dataset-blue.svg?style=plastic)](https://huggingface.co/datasets/Jonaszky123/MMLongCite)
+<p align="center">
+    <a href="https://huggingface.co/datasets/Jonaszky123/MMLongCite" target="_blank" rel="noopener noreferrer">
+        <img alt="paper" src="https://img.shields.io/badge/%F0%9F%A4%97-Dataset-blue">
+    </a>
+    <a href="https://arxiv.org/abs/2510.13276" target="_blank" rel="noopener noreferrer">
+        <img alt="paper" src="https://img.shields.io/badge/paper-paper?logo=arxiv&logoColor=%23B31B1B&labelColor=white&color=%23B31B1B">
+    </a>
+</p>
+
+## 📢 News
+
+- **[May, 2026]** Major update to MMLongCite: we extend the benchmark up to 128K tokens and refine the task taxonomy for more comprehensive faithfulness evaluation.
+
+- **[October, 2025]** Code and data of MMLongCite are now publicly available.
 
 ## 🚀 Quick Navigation
 
@@ -9,20 +22,27 @@
     - [Environment Setup](#environment)
     - [Data Preparation](#data-prepare)
 - [🤖️ Inference & Evaluation](#️-inference--evaluation)
-    - [Model Inference](#inference)
-    - [Performance Evaluation](#evaluation)
-- [📊 Evaluation Results](#-evaluation-results)
+    - [Inference](#inference)
+    - [Evaluation](#evaluation)
 - [📝 Citation](#-citation)
 - [🏷️ License](#-license)
 
 ## 🔍 Benchmark Overview
 
+MMLongCite is a benchmark for evaluating the **faithfulness** of long-context vision-language models (LCVLMs) through multimodal citation generation.
+The benchmark contains 2,280 examples across 8 tasks, covering **image-only, image-text interleaved, and video-only** contexts. Context lengths span from **8K to 128K tokens**.
+We also introduce MMLongCite-HR, a **high-resolution** setting that evaluates fine-grained visual grounding in dense stitched-image inputs. MMLongCite-HR provides two modes: the easy mode stitches 4 images into a single large image with an average resolution of 1K–2K, while the hard mode stitches 16 images into a single large image with an average resolution of 2K–4K.
 
-MMLongCite is a comprehensive benchmark designed to evaluate the **fidelity** of long-context vision-language models (LVLMs) through **citation**. It covers **4 task categories**, including Single-Source Visual Reasoning, Multi-Source Visual Reasoning, Vision Grounding, and Video Understanding, encompassing **8 distinct long-context tasks**. These tasks incorporate diverse modalities such as **images, text, and videos**, with context lengths ranging from **8K to 48K**.
-
-![](assets/task.png)
-
-
+<p align="center">
+  <img src="assets/task.png" alt="Overview of MMLongCite tasks">
+  <br>
+  <em>Figure 1: Task format in MMLongCite.</em>
+</p>
+<p align="center">
+  <img src="assets/statistics.png" alt="Overview of MMLongCite tasks">
+  <br>
+  <em>Figure 2: Statistics of tasks in MMLongCite.</em>
+</p>
 
 ## ⚙️ Preparation
 
@@ -43,22 +63,22 @@ The folder structure is organized as follows:
 
 ```
 project/
-├── MMLongCite/                   # [Download Required] Main dataset directory
-│   ├── data/                     # Annotation files
-│   │   ├── MMLongCite/           
-│   │   └── MMLongCite-Grounding/ 
-│   │       ├── easy/             
-│   │       └── hard/             
-│   └── images/                   # Image files directory
-│       ├── MMLongCite/           
-│       └── MMLongCite-Grounding/ 
-│           ├── easy/             
-│           └── hard/             
+├── data/                     # Downloaded from Huggingface
+│   ├── mmlongcite/           
+│   └── mmlongcite-hr/ 
+│       ├── easy/             
+│       └── hard/             
+├── images/                   # Downloaded from Huggingface
+│   ├── mmlongcite/           
+│   └── mmlongcite-hr/ 
+│       ├── easy/             
+│       └── hard/             
 ├── scripts/                      
 │   ├── infer.sh                  
 │   └── eval.sh                   
-├── src/                          # Source code
-└── readme.md                     # Documentation
+├── src/                      # Source code
+├── results/                  # Benchmark inference outputs
+└── readme.md                 # Documentation
 ```
 
 All data in MMLongCite follows the format below: 
@@ -71,34 +91,42 @@ All data in MMLongCite follows the format below:
 
 - ground_truth: The correct answer for the question.
 
-- task: A label that specifies the sub task category of the data sample.
+- meta: A dictionary containing additional information for each case, including:
 
-- text_length: A metadata field indicating the length of text content within the context.
+    - text_length: The length of text content within the context.
 
-- mm_length: A metadata field quantifying the multi-modal content within the context(e.g., number of images).
+    - mm_length: The length of multi-modal content within the context.
+
+    - evidence_ids: A list of position identifiers indicating where the supporting evidence is located within the long context.
+
 
 Here is an example:
 
 ```
 {
-    "id": 1,
+    "id": 7,
     "context": [
         {
             "type": "image",
-            "image": "image/mmlongcite/longdocurl/4027862_72.png"
+            "image": "image/mmlongcite/longdocurl/4120884_59.png"
         },
         ...
     ],
     "question": [
         {
             "type": "text",
-            "text": "What was difference value between the quantity of total consumption and total import for rice production in 2020?\n(A). 30517 metric tons\n(B). 34082 metric tons\n(C). 3565 metric tons\n(D). 64599 metric tons\nChoose the letter name in front of the right option from A, B, C, D."
+            "text": "Which para title discusses non-GAAP financial measures in the document?"
         }
     ]
-    "ground_truth": "C",
-    "task": ["SP_Figure_Reasoning"],
-    "text_length": 0,
-    "mm_length": 4620,
+    "ground_truth": "Non-US. GAAP Financial Measures",
+    "meta": {
+      "text_length": 0,
+      "mm_length": 11760,
+      "evidence_ids": [
+        7,
+        12
+      ]
+    }
 }
 ```
 
@@ -106,55 +134,91 @@ Here is an example:
 
 ### Inference
 
-We recommend using vllm to deploy the model for inference. Relevant examples can be found in the script folder.
+We provide a vLLM-based inference script in `src/infer_vllm.py`.
+Run inference on the main MMLongCite benchmark:
 
 ```
-### MMLongCite Inference
 python src/infer_vllm.py \
-        --model <your_model_name> \
-        --dataset "longdocurl" "mmlongbench-doc" "mm-niah" "hotpotqa" "2wikimultihopqa" "visual-haystack" "video-mme" "longvideobench"
-
-### MMLongCite-Grounding-Easy Inference
-python src/infer_vllm.py \
-        --model <your_model_name> \
-        --dataset "longdocurl-grounding-easy" "hotpotqa-grounding-easy" "visual-haystack-grounding-easy" "video-mme-grounding-easy"
-
-### MMLongCite-Grounding-Hard Inference
-python src/infer_vllm.py \
-        --model <Your_Model_Name> \
-        --dataset "longdocurl-grounding-hard" "hotpotqa-grounding-hard" "visual-haystack-grounding-hard" "video-mme-grounding-hard"
+  --model <model_name> \
+  --dataset longdocurl mmlongbench-doc slidevqa 2wikimultihopqa mm-niah visual-haystack video-mme longvideobench
 ```
 
-Results will be saved in the ```results/``` folder. You can find a example in ```scripts/infer.sh```.
+Run inference on MMLongCite-HR:
+
+```
+python src/infer_vllm.py \
+  --model <model_name> \
+  --dataset longdocurl-hr-easy longdocurl-hr-hard \
+            2wikimultihopqa-hr-easy 2wikimultihopqa-hr-hard \
+            visual-haystack-hr-easy visual-haystack-hr-hard \
+            longvideobench-hr-easy longvideobench-hr-hard
+```
+
+For models with thinking mode enabled:
+
+```
+python src/infer_vllm.py \
+  --model <model_name> \
+  --dataset longdocurl mmlongbench-doc slidevqa 2wikimultihopqa mm-niah visual-haystack video-mme longvideobench \
+  --thinking
+```
+
+Prediction files are saved to:
+
+```
+results/<dataset>/<model_name>.json
+results/<dataset>/<model_name>_thinking.json
+```
+
+You can also refer to the example script:
+
+```
+bash script/infer.sh
+```
 
 ### Evaluation
 
+MMLongCite evaluates both citation quality and answer correctness. We use GPT-5.2 as the judge model, and the evaluation scripts support passing in multiple API keys to accelerate evaluation.
+
+#### Citation Evaluation
 
 ```
-### Evaluate Citation
 python src/eval_cite.py \
-    --file <Your_Inference_Result_Path> \
-    --api_keys "<your_key1>" "<your_key2>" \
-    --api_base_url "<your_api_base_url>"
-
-### Evaluate Correctness
-python src/eval_correct.py \
-    --file <Your_Inference_Result_Path> \
-    --api_keys "<your_key1>" "<your_key2>" \
-    --api_base_url "<your_api_base_url>"
+  --model <model_name> \
+  --task <dataset_name> \
+  --api_keys <key1> <key2> \
+  --api_base_url <api_base_url>
 ```
 
-Running the evaluation code above will generate two files that record the model's final performance, with the suffixes ```"_citation_result.json"``` and ```"_correctness_result.json"``` respectively.
+This produces:
 
-## 📊 Evaluation Results
+```
+results/<dataset_name>/<model_name>_citation_result.json
+results/<dataset_name>/<model_name>_citation_score.json
+```
 
-Our evaluation covers commonly used long-context vision language models including both open-source and closed-source models of various sizes, architectures, and thinking modes.
+#### Correctness Evaluation
 
-![](assets/MMLongCite_result.png)
+```
+python src/eval_correct.py \
+  --model <model_name> \
+  --task <dataset_name> \
+  --api_keys <key1> <key2> \
+  --api_base_url <api_base_url>
+```
 
-We also propose MMLongCite-Grounding to specifically assess visual grounding and spatial reasoning.
+This produces:
 
-![](assets/MMLongCite-Grounding_result.png)
+```
+results/<dataset_name>/<model_name>_correctness_result.json
+results/<dataset_name>/<model_name>_correctness_score.json
+```
+
+Among the outputs, `citation_result.json` and `correctness_result.json` store per-case metrics for every example, while `citation_score.json` and `correctness_score.json` store the overall aggregated metrics for each task. Example evaluation commands are provided in:
+
+```bash
+bash script/eval.sh
+```
 
 
 
@@ -172,4 +236,5 @@ If you find our work helpful, please cite our paper:
 ```
 
 ## 🏷️ License
+
 All code within this repository is under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
