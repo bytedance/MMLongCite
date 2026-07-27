@@ -135,7 +135,7 @@ def query_api(reference, prediction, question, client):
     for attempt in range(max_retries):
         try:
             response = client.chat.completions.create(
-                model="gpt-5.2-chat-latest",
+                model="gpt-5.6-sol",
                 messages=[{"role": "user", "content": mm_input}],
                 max_tokens=1024,
                 temperature=0,
