@@ -194,26 +194,26 @@ def compute_autoais_single_item(item_with_index, task):
             "citation_f1": 0,
         }
     
-    # Post-process model predictions depending on dataset source/type
-    if "think" in data_path.lower() and ("glm" in data_path.lower() or "mimo" in data_path.lower() or "qwen" in data_path.lower()):
-        if "</think>" in item['model_predictions']:
-            ind = item['model_predictions'].rindex("</think>") + len("</think>")
+    # Post-process model predictions depending on dataset source/type 
+    if "think" in data_path.lower():
+        if "kimi" in data_path.lower():
+            end_tag = "◁/think▷"
+        else:
+            end_tag = "</think>"
+        
+        if end_tag in item['model_predictions']:
+            ind = item['model_predictions'].rindex(end_tag) + len(end_tag)
             item['model_predictions'] = item['model_predictions'][ind:]
             pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[:128]
             item['model_predictions'] = tokenizer.decode(pred_ids)
         else:
             pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[-128:]
             item['model_predictions'] = tokenizer.decode(pred_ids)
-    
-    elif "think" in data_path.lower() and "kimi" in data_path.lower():
-        if "◁/think▷" in item['model_predictions']:
-            ind = item['model_predictions'].rindex("◁/think▷") + len("◁/think▷")
-            item['model_predictions'] = item['model_predictions'][ind:]
-            pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[:128]
-            item['model_predictions'] = tokenizer.decode(pred_ids)
-        else:
-            pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)[-128:]
-            item['model_predictions'] = tokenizer.decode(pred_ids)
+    elif "mimo" in data_path.lower():
+        ind = item['model_predictions'].rindex("</think>") + len("</think>")
+        item['model_predictions'] = item['model_predictions'][ind:]
+        pred_ids = tokenizer.encode(item['model_predictions'], add_special_tokens=False)
+        item['model_predictions'] = tokenizer.decode(pred_ids)
     
     # Sentence segmentation
     sents = sent_tokenize(item['model_predictions'])

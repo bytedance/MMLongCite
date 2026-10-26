@@ -172,29 +172,15 @@ DATASET_INFO = {
     },
 }
 
-
 MODEL_DIC = {
     "Qwen2.5-VL-3B-Instruct": "Qwen/Qwen2.5-VL-3B-Instruct",
     "Qwen2.5-VL-7B-Instruct": "Qwen/Qwen2.5-VL-7B-Instruct",
     "Qwen2.5-VL-32B-Instruct": "Qwen/Qwen2.5-VL-32B-Instruct",
     "Qwen2.5-VL-72B-Instruct": "Qwen/Qwen2.5-VL-72B-Instruct",
-    "Kimi-VL-A3B-Instruct": "moonshotai/Kimi-VL-A3B-Instruct",
-    "Kimi-VL-A3B-Thinking": "moonshotai/Kimi-VL-A3B-Thinking",
-    "GLM-4.5V": "zai-org/GLM-4.5V",
+    "MiMo-VL-7B-SFT-2508_thinking": "XiaomiMiMo/MiMo-VL-7B-SFT-2508",
+    "MiMo-VL-7B-RL-2508_thinking": "XiaomiMiMo/MiMo-VL-7B-RL-2508",
     "MiMo-VL-7B-SFT-2508": "XiaomiMiMo/MiMo-VL-7B-SFT-2508",
     "MiMo-VL-7B-RL-2508": "XiaomiMiMo/MiMo-VL-7B-RL-2508",
-    "gemma-3-12b-it": "google/gemma-3-12b-it",
-}
-
-MODEL_DIC = {
-    "Qwen2.5-VL-3B-Instruct": "Qwen/Qwen2.5-VL-3B-Instruct",
-    "Qwen2.5-VL-7B-Instruct": "Qwen/Qwen2.5-VL-7B-Instruct",
-    "Qwen2.5-VL-32B-Instruct": "Qwen/Qwen2.5-VL-32B-Instruct",
-    "Qwen2.5-VL-72B-Instruct": "Qwen/Qwen2.5-VL-72B-Instruct",
-    "MiMo-VL-7B-SFT-2508": "XiaomiMiMo/MiMo-VL-7B-SFT-2508",
-    "MiMo-VL-7B-RL-2508": "XiaomiMiMo/MiMo-VL-7B-RL-2508",
-    "MiMo-VL-7B-SFT-2508_no_think": "XiaomiMiMo/MiMo-VL-7B-SFT-2508",
-    "MiMo-VL-7B-RL-2508_no_think": "XiaomiMiMo/MiMo-VL-7B-RL-2508",
     "gemma-3-12b-it": "google/gemma-3-12b-it",
     "InternVL3_5-4B-HF": "OpenGVLab/InternVL3_5-4B-HF",
     "Qwen3-VL-30B-A3B-Instruct": "Qwen/Qwen3-VL-30B-A3B-Instruct",
@@ -210,8 +196,6 @@ MODEL_DIC = {
     "Qwen3.5-2B": "Qwen/Qwen3.5-2B",
     "Qwen3.5-4B": "Qwen/Qwen3.5-4B",
     "Qwen3.5-9B": "Qwen/Qwen3.5-9B",
-    "Qwen3.5-27B": "Qwen/Qwen3.5-27B",
-    "Qwen3.5-27B_thinking": "Qwen/Qwen3.5-27B",
     "Qwen3.5-122B-A10B": "Qwen/Qwen3.5-122B-A10B",
     "GLM-4.6V-Flash": "zai-org/GLM-4.6V-Flash",
     "GLM-4.6V": "zai-org/GLM-4.6V",
@@ -274,25 +258,25 @@ model_generation_params = {
         "top_p": 0.6,
         "top_k": 2,
     },
+    "MiMo-VL-7B-SFT-2508_thinking": {
+        "max_tokens": 32768,
+        "temperature": 0.3,
+        "top_p": 0.95,
+        "top_k": None,
+    },
+    "MiMo-VL-7B-RL-2508_thinking": {
+        "max_tokens": 32768,
+        "temperature": 0.3,
+        "top_p": 0.95,
+        "top_k": None,
+    },
     "MiMo-VL-7B-SFT-2508": {
-        "max_tokens": 32768,
-        "temperature": 0.3,
-        "top_p": 0.95,
-        "top_k": None,
-    },
-    "MiMo-VL-7B-RL-2508": {
-        "max_tokens": 32768,
-        "temperature": 0.3,
-        "top_p": 0.95,
-        "top_k": None,
-    },
-    "MiMo-VL-7B-SFT-2508_no_think": {
         "max_tokens": 512,
         "temperature": 0.3,
         "top_p": 0.95,
         "top_k": None,
     },
-    "MiMo-VL-7B-RL-2508_no_think": {
+    "MiMo-VL-7B-RL-2508": {
         "max_tokens": 512,
         "temperature": 0.3,
         "top_p": 0.95,
@@ -368,18 +352,6 @@ model_generation_params = {
         "max_tokens": 512,
         "temperature": 0,
         "top_p": 1,
-        "top_k": None,
-    },
-    "Qwen3.5-27B": {
-        "max_tokens": 512,
-        "temperature": 0,
-        "top_p": 1,
-        "top_k": None,
-    },
-    "Qwen3.5-27B_thinking": {
-        "max_tokens": 32768,
-        "temperature": 0.3,
-        "top_p": 0.95,
         "top_k": None,
     },
     "Qwen3.5-122B-A10B": {

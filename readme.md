@@ -11,6 +11,8 @@
 
 ## 📢 News
 
+- **[September, 2026]** 🎉 MMLongCite is accepted at NeurIPS 2026.
+
 - **[May, 2026]** Major update to MMLongCite: we extend the benchmark up to 128K tokens and refine the task taxonomy for more comprehensive faithfulness evaluation.
 
 - **[October, 2025]** Code and data of MMLongCite are now publicly available.
@@ -180,6 +182,8 @@ bash script/infer.sh
 
 MMLongCite evaluates both citation quality and answer correctness. We use GPT-5.2 as the judge model, and the evaluation scripts support passing in multiple API keys to accelerate evaluation.
 
+**Update (October 2026):** As GPT-5.2 is no longer available via the API, we now also support Qwen3.6-27B as an open-source judge model. Evaluation results for all models, with Qwen3.6-27B as the judge, are reported in Table 8 of the paper’s appendix.
+
 #### Citation Evaluation
 
 ```
@@ -220,6 +224,8 @@ Among the outputs, `citation_result.json` and `correctness_result.json` store pe
 bash script/eval.sh
 ```
 
+You can run ```script/eval_with_qwen36.sh``` to use Qwen3.6-27B as the judge. 
+
 
 
 ## 📝 Citation
@@ -227,11 +233,14 @@ bash script/eval.sh
 If you find our work helpful, please cite our paper:
 
 ```
-@article{zhou2025mmlongcite,
-  title={MMLongCite: A Benchmark for Evaluating Fidelity of Long-Context Vision-Language Models},
-  author={Zhou, Keyan and Tang, Zecheng and Ming, Lingfeng and Zhou, Guanghao and Chen, Qiguang and Qiao, Dan and Yang, Zheming and Qin, Libo and Qiu, Minghui and Li, Juntao and others},
-  journal={arXiv preprint arXiv:2510.13276},
-  year={2025}
+@misc{zhou2026mmlongcitebenchmarkevaluatingfaithfulness,
+      title={MMLongCite: A Benchmark for Evaluating Faithfulness of Long-Context Vision-Language Models}, 
+      author={Keyan Zhou and Zecheng Tang and Lingfeng Ming and Qiguang Chen and Wangjie You and Guanghao Zhou and Dan Qiao and Zheming Yang and Libo Qin and Minghui Qiu and Juntao Li and Min Zhang},
+      year={2026},
+      eprint={2510.13276},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2510.13276}, 
 }
 ```
 
