@@ -1,4 +1,4 @@
-# MMLONGCITE: A Benchmark for Evaluating Faithfulness of Long-Context Vision-Language Models
+# MMLONGCITE: A Benchmark for Evaluating Faithfulness of Long-Context Vision-Language Models [NeurIPS 2026]
 
 <p align="center">
     <a href="https://huggingface.co/datasets/Jonaszky123/MMLongCite" target="_blank" rel="noopener noreferrer">
